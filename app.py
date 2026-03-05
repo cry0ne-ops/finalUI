@@ -1,4 +1,6 @@
-
+import streamlit as st
+import pandas as pd
+import joblib
 
 # Load trained models
 lr_model = joblib.load("linear_regression_model.pkl")
