@@ -18,7 +18,7 @@ st.set_page_config(
 
 st.title("🚚 Delivery Time Prediction System")
 st.caption(
-"Predict delivery time of perishable vegetables using machine learning models."
+"Predict the delivery time of perishable vegetables using machine learning models."
 )
 
 st.markdown("---")
@@ -37,14 +37,14 @@ This system predicts delivery time using three machine learning models:
 • Random Forest Regression  
 • Decision Tree Regression  
 
-The system evaluates model performance using:
+Each model is evaluated using:
 
-• MAE – Mean Absolute Error  
-• MSE – Mean Squared Error  
-• RMSE – Root Mean Squared Error  
-• R² – Model accuracy score  
+• **MAE** – Mean Absolute Error  
+• **MSE** – Mean Squared Error  
+• **RMSE** – Root Mean Squared Error  
+• **R² Score** – Model accuracy
 
-The model with the **lowest RMSE** is recommended.
+The system recommends the model with the **best overall performance**.
 """
 )
 
@@ -63,7 +63,7 @@ lr_model, rf_model, dt_model = load_models()
 
 # -------------------------------------------------
 # MODEL PERFORMANCE METRICS
-# Replace these with your real results
+# Replace with your actual results
 # -------------------------------------------------
 
 metrics = pd.DataFrame({
@@ -156,26 +156,6 @@ with col2:
 predict = st.button("🚀 Predict Delivery Time")
 
 # -------------------------------------------------
-# CONFIDENCE FUNCTION
-# -------------------------------------------------
-
-def calculate_confidence(predictions):
-
-    std_dev = np.std(predictions)
-
-    if std_dev < 2:
-        confidence = "High Confidence"
-        score = 0.9
-    elif std_dev < 5:
-        confidence = "Moderate Confidence"
-        score = 0.7
-    else:
-        confidence = "Low Confidence"
-        score = 0.5
-
-    return confidence, score, std_dev
-
-# -------------------------------------------------
 # PREDICTION
 # -------------------------------------------------
 
@@ -205,10 +185,6 @@ if predict:
     pred_rf = max(rf_model.predict(input_df)[0],0)
     pred_dt = max(dt_model.predict(input_df)[0],0)
 
-    predictions = [pred_lr,pred_rf,pred_dt]
-
-    confidence, score, std_dev = calculate_confidence(predictions)
-
     st.markdown("---")
 
     # -------------------------------------------------
@@ -237,7 +213,7 @@ if predict:
     st.markdown("---")
 
     # -------------------------------------------------
-    # MODEL COMPARISON CHART
+    # PREDICTION COMPARISON
     # -------------------------------------------------
 
     prediction_df = pd.DataFrame({
@@ -252,7 +228,7 @@ if predict:
     st.markdown("---")
 
     # -------------------------------------------------
-    # MODEL PERFORMANCE
+    # MODEL PERFORMANCE METRICS
     # -------------------------------------------------
 
     st.subheader("Model Performance Metrics")
@@ -268,7 +244,7 @@ if predict:
     st.markdown("---")
 
     # -------------------------------------------------
-    # MODEL RECOMMENDATION
+    # RECOMMENDATION BASED ON METRICS
     # -------------------------------------------------
 
     best_model = metrics.loc[metrics["RMSE"].idxmin()]
@@ -276,35 +252,19 @@ if predict:
     st.subheader("Recommended Model")
 
     st.success(
-        f"The recommended model is **{best_model['Model']}** because it has the lowest RMSE."
+        f"**{best_model['Model']}** is recommended."
     )
-
-    st.info(
-"""
-RMSE measures prediction error.  
-Lower RMSE means the model predicts delivery time more accurately.
-"""
-)
-
-    st.markdown("---")
-
-    # -------------------------------------------------
-    # CONFIDENCE VISUALIZATION
-    # -------------------------------------------------
-
-    st.subheader("Prediction Confidence")
 
     st.write(
-    "Confidence is calculated based on how similar the predictions from the three models are."
-    )
+    f"""
+The recommendation is based on the model evaluation metrics.
 
-    st.progress(score)
+• **MAE:** {best_model['MAE']}  
+• **MSE:** {best_model['MSE']}  
+• **RMSE:** {best_model['RMSE']}  
+• **R² Score:** {best_model['R2']}
 
-    st.metric(
-        "Confidence Level",
-        confidence
-    )
-
-    st.caption(
-        f"Prediction variation between models: {std_dev:.2f} minutes"
+This model was selected because it has the **lowest RMSE**, which means its predictions are closest to the actual delivery times.
+A lower RMSE indicates better prediction accuracy compared to the other models.
+"""
     )
