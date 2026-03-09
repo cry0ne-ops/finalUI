@@ -2,108 +2,114 @@ import streamlit as st
 import pandas as pd
 import joblib
 
+# -----------------------------
+# Page setup
+# -----------------------------
+
 st.set_page_config(
-    page_title="Delivery Time Prediction",
+    page_title="Delivery Time Prediction System",
     layout="centered"
 )
 
-# ------------------------------
-# Title
-# ------------------------------
-
 st.title("Delivery Time Prediction System")
-st.caption("Optimizing delivery for perishable vegetables using machine learning")
+st.caption("Predict delivery time for perishable vegetables using machine learning")
 
-# ------------------------------
-# Load Models
-# ------------------------------
+st.markdown("---")
+
+# -----------------------------
+# Load models
+# -----------------------------
 
 lr_model = joblib.load("models/linear_regression_model.pkl")
 rf_model = joblib.load("models/random_forest_model.pkl")
 dt_model = joblib.load("models/decision_tree_model.pkl")
 
-# ------------------------------
+# -----------------------------
 # Input Section
-# ------------------------------
+# -----------------------------
 
-st.header("Delivery Information")
+st.header("Enter Delivery Information")
 
 col1, col2 = st.columns(2)
 
 with col1:
 
-    vegetable = st.selectbox(
+    vegetable_type = st.selectbox(
         "Vegetable Type",
-        ["Tomatoes","Potatoes","Carrots","Cabbage","Onions"]
+        ["Tomatoes","Bell Pepper","Potatoes","Cabbage","Carrots","Onions"]
     )
 
-    shelf_life = st.number_input(
+    shelf_life_days = st.number_input(
         "Shelf Life (Days)",
         min_value=1,
         max_value=60,
         value=7
     )
 
-    time_day = st.selectbox(
+    time_of_day = st.selectbox(
         "Time of Day",
         ["Morning","Afternoon","Evening","Night"]
     )
 
-    vehicle = st.selectbox(
+    vehicle_type = st.selectbox(
         "Vehicle Type",
         ["Motorcycle","Van","Truck"]
     )
 
 with col2:
 
-    distance = st.number_input(
+    route_distance_km = st.number_input(
         "Route Distance (km)",
         min_value=0.0,
         value=5.0
     )
 
-    stops = st.number_input(
+    number_of_stops = st.number_input(
         "Number of Stops",
         min_value=0,
         value=1
     )
 
-    terrain = st.selectbox(
+    terrain_type = st.selectbox(
         "Terrain Type",
         ["Urban","Rural","Mountain"]
     )
 
-    traffic = st.selectbox(
+    traffic_density = st.selectbox(
         "Traffic Density",
         ["Low","Medium","High"]
     )
 
-    weather = st.selectbox(
+    weather_condition = st.selectbox(
         "Weather Condition",
         ["Sunny","Rainy","Fog","Storm"]
     )
 
-# ------------------------------
-# Prediction Button
-# ------------------------------
+st.markdown("---")
+
+# -----------------------------
+# Prediction
+# -----------------------------
 
 if st.button("Predict Delivery Time"):
 
     input_df = pd.DataFrame({
 
-        "vegetable_type":[vegetable],
-        "shelf_life_days":[shelf_life],
-        "time_of_day":[time_day],
+        "vegetable_type":[vegetable_type],
+        "shelf_life_days":[shelf_life_days],
+        "time_of_day":[time_of_day],
+
         "origin_latitude":[0],
         "origin_longitude":[0],
         "destination_latitude":[0],
         "destination_longitude":[0],
-        "route_distance_km":[distance],
-        "terrain_type":[terrain],
-        "number_of_stops":[stops],
-        "traffic_density":[traffic],
-        "weather_condition":[weather],
-        "vehicle_type":[vehicle]
+
+        "route_distance_km":[route_distance_km],
+        "terrain_type":[terrain_type],
+        "number_of_stops":[number_of_stops],
+        "traffic_density":[traffic_density],
+        "weather_condition":[weather_condition],
+        "vehicle_type":[vehicle_type]
 
     })
 
@@ -114,24 +120,29 @@ if st.button("Predict Delivery Time"):
     st.header("Prediction Results")
 
     results = pd.DataFrame({
+
         "Model":[
             "Multiple Linear Regression",
             "Random Forest Regression",
             "Decision Tree Regression"
         ],
+
         "Predicted Delivery Time (minutes)":[
-            pred_lr,
-            pred_rf,
-            pred_dt
+            round(pred_lr,2),
+            round(pred_rf,2),
+            round(pred_dt,2)
         ]
+
     })
 
     st.table(results)
+
+    st.markdown("---")
 
     best_model = results.loc[
         results["Predicted Delivery Time (minutes)"].idxmin()
     ]
 
     st.success(
-        f"Recommended Prediction: {best_model['Model']}"
+        f"Recommended Model: **{best_model['Model']}**"
     )
