@@ -2,92 +2,136 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# Load trained models
-lr_model = joblib.load("linear_regression_model.pkl")
-dt_model = joblib.load("decision_tree_model.pkl")
-rf_model = joblib.load("random_forest_model.pkl")
-
-st.title("Vegetable Delivery Time Prediction System")
-
-st.write("Enter delivery details to estimate delivery time.")
-
-# User Inputs
-vegetable = st.selectbox(
-    "Vegetable Type",
-    ["Carrots","Lettuce","Potatoes","Cabbage","Broccoli",
-     "Cauliflower","Bell Pepper","Tomatoes","Baguio Beans","Chayote"]
+st.set_page_config(
+    page_title="Delivery Time Prediction",
+    layout="centered"
 )
 
-distance = st.number_input("Route Distance (km)",0.1,50.0)
+# ------------------------------
+# Title
+# ------------------------------
 
-terrain = st.selectbox(
-    "Terrain Type",
-    ["Flat","Moderate_Slope","Steep_Slope"]
-)
+st.title("Delivery Time Prediction System")
+st.caption("Optimizing delivery for perishable vegetables using machine learning")
 
-traffic = st.selectbox(
-    "Traffic Density",
-    ["Low","Medium","High"]
-)
+# ------------------------------
+# Load Models
+# ------------------------------
 
-weather = st.selectbox(
-    "Weather Condition",
-    ["Clear","Cloudy","Rainy","Foggy"]
-)
+lr_model = joblib.load("models/linear_regression_model.pkl")
+rf_model = joblib.load("models/random_forest_model.pkl")
+dt_model = joblib.load("models/decision_tree_model.pkl")
 
-stops = st.slider("Number of Stops",0,5)
+# ------------------------------
+# Input Section
+# ------------------------------
 
-vehicle = st.selectbox(
-    "Vehicle Type",
-    ["Motorcycle","Truck"]
-)
+st.header("Delivery Information")
 
-time_of_day = st.selectbox(
-    "Time of Day",
-    ["Morning","Afternoon","Evening","Night"]
-)
+col1, col2 = st.columns(2)
 
-# Prediction
+with col1:
+
+    vegetable = st.selectbox(
+        "Vegetable Type",
+        ["Tomatoes","Potatoes","Carrots","Cabbage","Onions"]
+    )
+
+    shelf_life = st.number_input(
+        "Shelf Life (Days)",
+        min_value=1,
+        max_value=60,
+        value=7
+    )
+
+    time_day = st.selectbox(
+        "Time of Day",
+        ["Morning","Afternoon","Evening","Night"]
+    )
+
+    vehicle = st.selectbox(
+        "Vehicle Type",
+        ["Motorcycle","Van","Truck"]
+    )
+
+with col2:
+
+    distance = st.number_input(
+        "Route Distance (km)",
+        min_value=0.0,
+        value=5.0
+    )
+
+    stops = st.number_input(
+        "Number of Stops",
+        min_value=0,
+        value=1
+    )
+
+    terrain = st.selectbox(
+        "Terrain Type",
+        ["Urban","Rural","Mountain"]
+    )
+
+    traffic = st.selectbox(
+        "Traffic Density",
+        ["Low","Medium","High"]
+    )
+
+    weather = st.selectbox(
+        "Weather Condition",
+        ["Sunny","Rainy","Fog","Storm"]
+    )
+
+# ------------------------------
+# Prediction Button
+# ------------------------------
+
 if st.button("Predict Delivery Time"):
 
-    input_data = pd.DataFrame({
+    input_df = pd.DataFrame({
+
         "vegetable_type":[vegetable],
+        "shelf_life_days":[shelf_life],
+        "time_of_day":[time_day],
+        "origin_latitude":[0],
+        "origin_longitude":[0],
+        "destination_latitude":[0],
+        "destination_longitude":[0],
         "route_distance_km":[distance],
         "terrain_type":[terrain],
         "number_of_stops":[stops],
         "traffic_density":[traffic],
         "weather_condition":[weather],
-        "vehicle_type":[vehicle],
-        "time_of_day":[time_of_day]
+        "vehicle_type":[vehicle]
+
     })
 
-    lr_pred = lr_model.predict(input_data)[0]
-    dt_pred = dt_model.predict(input_data)[0]
-    rf_pred = rf_model.predict(input_data)[0]
+    pred_lr = lr_model.predict(input_df)[0]
+    pred_rf = rf_model.predict(input_df)[0]
+    pred_dt = dt_model.predict(input_df)[0]
 
-    st.subheader("Model Predictions")
+    st.header("Prediction Results")
 
-    st.write(f"Multiple Linear Regression: {lr_pred:.2f} minutes")
-    st.write(f"Decision Tree: {dt_pred:.2f} minutes")
-    st.write(f"Random Forest: {rf_pred:.2f} minutes")
+    results = pd.DataFrame({
+        "Model":[
+            "Multiple Linear Regression",
+            "Random Forest Regression",
+            "Decision Tree Regression"
+        ],
+        "Predicted Delivery Time (minutes)":[
+            pred_lr,
+            pred_rf,
+            pred_dt
+        ]
+    })
 
-    avg_pred = (lr_pred + dt_pred + rf_pred) / 3
+    st.table(results)
 
-    st.subheader("Estimated Delivery Time")
+    best_model = results.loc[
+        results["Predicted Delivery Time (minutes)"].idxmin()
+    ]
 
-    st.success(f"Estimated Delivery Time: {avg_pred:.2f} minutes")
-
-    # Simple explanation for normal users
-    explanation = f"""
-    The system analyzed the delivery route using three machine learning models.
-
-    Factors affecting the delivery time include:
-    • Distance of {distance} km  
-    • Traffic condition: {traffic}  
-    • Terrain type: {terrain}  
-    • Number of stops: {stops}
-
-    Based on these factors, the estimated delivery time is around **{avg_pred:.1f} minutes**.
-    """
-
-    st.write(explanation)
+    st.success(
+        f"Recommended Prediction: {best_model['Model']}"
+    )
