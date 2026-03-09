@@ -1,19 +1,20 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import numpy as np
 
-# -----------------------------
+# -------------------------------------------------
 # PAGE CONFIG
-# -----------------------------
+# -------------------------------------------------
 
 st.set_page_config(
     page_title="Delivery Time Prediction Dashboard",
     layout="wide"
 )
 
-# -----------------------------
+# -------------------------------------------------
 # TITLE
-# -----------------------------
+# -------------------------------------------------
 
 st.title("🚚 Delivery Time Prediction System")
 st.caption(
@@ -22,30 +23,34 @@ st.caption(
 
 st.markdown("---")
 
-# -----------------------------
+# -------------------------------------------------
 # SIDEBAR
-# -----------------------------
+# -------------------------------------------------
 
-st.sidebar.header("About This System")
+st.sidebar.header("About This Dashboard")
 
 st.sidebar.write(
 """
-This dashboard predicts delivery time using three machine learning models.
+This system predicts delivery time using three machine learning models:
 
-The system compares the performance of each model using:
+• Multiple Linear Regression  
+• Random Forest Regression  
+• Decision Tree Regression  
 
-• MAE (Mean Absolute Error)  
-• MSE (Mean Squared Error)  
-• RMSE (Root Mean Squared Error)  
-• R² Score  
+The system evaluates model performance using:
 
-The model with the best performance will be recommended.
+• MAE – Mean Absolute Error  
+• MSE – Mean Squared Error  
+• RMSE – Root Mean Squared Error  
+• R² – Model accuracy score  
+
+The model with the **lowest RMSE** is recommended.
 """
 )
 
-# -----------------------------
+# -------------------------------------------------
 # LOAD MODELS
-# -----------------------------
+# -------------------------------------------------
 
 @st.cache_resource
 def load_models():
@@ -56,10 +61,10 @@ def load_models():
 
 lr_model, rf_model, dt_model = load_models()
 
-# -----------------------------
-# LOAD METRICS
-# (Replace values with your real metrics if available)
-# -----------------------------
+# -------------------------------------------------
+# MODEL PERFORMANCE METRICS
+# Replace these with your real results
+# -------------------------------------------------
 
 metrics = pd.DataFrame({
 
@@ -76,9 +81,9 @@ metrics = pd.DataFrame({
 
 })
 
-# -----------------------------
+# -------------------------------------------------
 # SYSTEM OVERVIEW
-# -----------------------------
+# -------------------------------------------------
 
 st.subheader("System Overview")
 
@@ -90,9 +95,9 @@ col3.metric("Dataset Features", "12")
 
 st.markdown("---")
 
-# -----------------------------
-# INPUT FORM
-# -----------------------------
+# -------------------------------------------------
+# INPUT SECTION
+# -------------------------------------------------
 
 st.subheader("Enter Delivery Information")
 
@@ -148,11 +153,31 @@ with col2:
         ["Sunny","Rainy","Fog","Storm"]
     )
 
-predict = st.button("Predict Delivery Time")
+predict = st.button("🚀 Predict Delivery Time")
 
-# -----------------------------
+# -------------------------------------------------
+# CONFIDENCE FUNCTION
+# -------------------------------------------------
+
+def calculate_confidence(predictions):
+
+    std_dev = np.std(predictions)
+
+    if std_dev < 2:
+        confidence = "High Confidence"
+        score = 0.9
+    elif std_dev < 5:
+        confidence = "Moderate Confidence"
+        score = 0.7
+    else:
+        confidence = "Low Confidence"
+        score = 0.5
+
+    return confidence, score, std_dev
+
+# -------------------------------------------------
 # PREDICTION
-# -----------------------------
+# -------------------------------------------------
 
 if predict:
 
@@ -180,7 +205,15 @@ if predict:
     pred_rf = max(rf_model.predict(input_df)[0],0)
     pred_dt = max(dt_model.predict(input_df)[0],0)
 
+    predictions = [pred_lr,pred_rf,pred_dt]
+
+    confidence, score, std_dev = calculate_confidence(predictions)
+
     st.markdown("---")
+
+    # -------------------------------------------------
+    # PREDICTION RESULTS
+    # -------------------------------------------------
 
     st.subheader("Predicted Delivery Time")
 
@@ -203,38 +236,75 @@ if predict:
 
     st.markdown("---")
 
-    # -----------------------------
-    # MODEL PERFORMANCE
-    # -----------------------------
+    # -------------------------------------------------
+    # MODEL COMPARISON CHART
+    # -------------------------------------------------
 
-    st.subheader("Model Performance Comparison")
+    prediction_df = pd.DataFrame({
+        "Model":["Linear Regression","Random Forest","Decision Tree"],
+        "Prediction":[pred_lr,pred_rf,pred_dt]
+    })
+
+    st.subheader("Prediction Comparison")
+
+    st.bar_chart(prediction_df.set_index("Model"))
+
+    st.markdown("---")
+
+    # -------------------------------------------------
+    # MODEL PERFORMANCE
+    # -------------------------------------------------
+
+    st.subheader("Model Performance Metrics")
 
     st.write(
-    "These metrics show how accurate each model is based on the training data."
+    "These metrics show how accurate each model performed during training."
     )
 
     st.dataframe(metrics)
 
     st.bar_chart(metrics.set_index("Model")[["RMSE"]])
 
-    # -----------------------------
+    st.markdown("---")
+
+    # -------------------------------------------------
     # MODEL RECOMMENDATION
-    # -----------------------------
+    # -------------------------------------------------
 
     best_model = metrics.loc[metrics["RMSE"].idxmin()]
-
-    st.markdown("---")
 
     st.subheader("Recommended Model")
 
     st.success(
-    f"The recommended model is **{best_model['Model']}** "
-    "because it has the lowest RMSE and best prediction accuracy."
+        f"The recommended model is **{best_model['Model']}** because it has the lowest RMSE."
     )
 
     st.info(
-    """
-RMSE measures how far predictions are from actual values.
-A lower RMSE means the model makes more accurate predictions.
 """
+RMSE measures prediction error.  
+Lower RMSE means the model predicts delivery time more accurately.
+"""
+)
+
+    st.markdown("---")
+
+    # -------------------------------------------------
+    # CONFIDENCE VISUALIZATION
+    # -------------------------------------------------
+
+    st.subheader("Prediction Confidence")
+
+    st.write(
+    "Confidence is calculated based on how similar the predictions from the three models are."
+    )
+
+    st.progress(score)
+
+    st.metric(
+        "Confidence Level",
+        confidence
+    )
+
+    st.caption(
+        f"Prediction variation between models: {std_dev:.2f} minutes"
     )
