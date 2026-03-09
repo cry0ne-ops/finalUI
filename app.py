@@ -2,31 +2,72 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# -----------------------------
-# Page setup
-# -----------------------------
+# ---------------------------------------
+# PAGE CONFIG
+# ---------------------------------------
 
 st.set_page_config(
-    page_title="Delivery Time Prediction System",
-    layout="centered"
+    page_title="Delivery Time Prediction Dashboard",
+    layout="wide"
 )
 
-st.title("Delivery Time Prediction System")
-st.caption("Predict delivery time for perishable vegetables using machine learning")
+# ---------------------------------------
+# SIDEBAR
+# ---------------------------------------
+
+st.sidebar.title("Delivery Prediction System")
+st.sidebar.info(
+"""
+This system predicts delivery time for perishable goods using
+three regression models:
+
+• Multiple Linear Regression  
+• Random Forest Regression  
+• Decision Tree Regression
+"""
+)
+
+st.sidebar.markdown("---")
+
+st.sidebar.write("Developed for Thesis Project")
+
+# ---------------------------------------
+# TITLE
+# ---------------------------------------
+
+st.title("🚚 Delivery Time Prediction Dashboard")
+st.caption("Machine Learning System for Predicting Delivery Time of Perishable Vegetables")
 
 st.markdown("---")
 
-# -----------------------------
-# Load models
-# -----------------------------
+# ---------------------------------------
+# LOAD MODELS (cached)
+# ---------------------------------------
 
-lr_model = joblib.load("models/linear_regression_model.pkl")
-rf_model = joblib.load("models/random_forest_model.pkl")
-dt_model = joblib.load("models/decision_tree_model.pkl")
+@st.cache_resource
+def load_models():
+    lr = joblib.load("models/linear_regression_model.pkl")
+    rf = joblib.load("models/random_forest_model.pkl")
+    dt = joblib.load("models/decision_tree_model.pkl")
+    return lr, rf, dt
 
-# -----------------------------
-# Input Section
-# -----------------------------
+lr_model, rf_model, dt_model = load_models()
+
+# ---------------------------------------
+# SYSTEM OVERVIEW
+# ---------------------------------------
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric("Models Used", "3")
+col2.metric("Prediction Type", "Regression")
+col3.metric("Dataset Features", "12")
+
+st.markdown("---")
+
+# ---------------------------------------
+# INPUT SECTION
+# ---------------------------------------
 
 st.header("Enter Delivery Information")
 
@@ -36,7 +77,7 @@ with col1:
 
     vegetable_type = st.selectbox(
         "Vegetable Type",
-        ["Tomatoes","Bell Pepper","Potatoes","Cabbage","Carrots","Onions"]
+        ["Tomatoes","Potatoes","Carrots","Cabbage","Onions","Bell Pepper"]
     )
 
     shelf_life_days = st.number_input(
@@ -85,13 +126,15 @@ with col2:
         ["Sunny","Rainy","Fog","Storm"]
     )
 
-st.markdown("---")
+st.markdown("")
 
-# -----------------------------
-# Prediction
-# -----------------------------
+predict = st.button("🚀 Predict Delivery Time")
 
-if st.button("Predict Delivery Time"):
+# ---------------------------------------
+# PREDICTION
+# ---------------------------------------
+
+if predict:
 
     input_df = pd.DataFrame({
 
@@ -113,37 +156,72 @@ if st.button("Predict Delivery Time"):
 
     })
 
-    pred_lr = lr_model.predict(input_df)[0]
-    pred_lr = abs(lr_model.predict(input_df)[0])
-    pred_rf = rf_model.predict(input_df)[0]
-    pred_dt = dt_model.predict(input_df)[0]
+    # predictions
+    pred_lr = max(lr_model.predict(input_df)[0],0)
+    pred_rf = max(rf_model.predict(input_df)[0],0)
+    pred_dt = max(dt_model.predict(input_df)[0],0)
+
+    st.markdown("---")
 
     st.header("Prediction Results")
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric(
+        "Linear Regression",
+        f"{pred_lr:.2f} minutes"
+    )
+
+    col2.metric(
+        "Random Forest",
+        f"{pred_rf:.2f} minutes"
+    )
+
+    col3.metric(
+        "Decision Tree",
+        f"{pred_dt:.2f} minutes"
+    )
+
+    # ---------------------------------------
+    # COMPARISON CHART
+    # ---------------------------------------
 
     results = pd.DataFrame({
 
         "Model":[
-            "Multiple Linear Regression",
-            "Random Forest Regression",
-            "Decision Tree Regression"
+            "Linear Regression",
+            "Random Forest",
+            "Decision Tree"
         ],
 
-        "Predicted Delivery Time (minutes)":[
-            round(pred_lr,2),
-            round(pred_rf,2),
-            round(pred_dt,2)
+        "Prediction":[
+            pred_lr,
+            pred_rf,
+            pred_dt
         ]
 
     })
 
-    st.table(results)
-
     st.markdown("---")
 
+    st.subheader("Model Prediction Comparison")
+
+    st.bar_chart(
+        results.set_index("Model")
+    )
+
+    # ---------------------------------------
+    # RECOMMENDATION
+    # ---------------------------------------
+
     best_model = results.loc[
-        results["Predicted Delivery Time (minutes)"].idxmin()
+        results["Prediction"].idxmin()
     ]
 
     st.success(
-        f"Recommended Model: **{best_model['Model']}**"
+        f"Recommended Model: {best_model['Model']}"
+    )
+
+    st.info(
+        "This model produced the lowest predicted delivery time for the given conditions."
     )
