@@ -114,6 +114,7 @@ if st.button("Predict Delivery Time"):
     })
 
     pred_lr = lr_model.predict(input_df)[0]
+    pred_lr = max(pred_lr, 0)
     pred_rf = rf_model.predict(input_df)[0]
     pred_dt = dt_model.predict(input_df)[0]
 
