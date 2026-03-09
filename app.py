@@ -181,7 +181,7 @@ if predict:
 
     })
 
-    pred_lr = max(lr_model.predict(input_df)[0],0)
+    pred_lr = abs(lr_model.predict(input_df)[0])
     pred_rf = max(rf_model.predict(input_df)[0],0)
     pred_dt = max(dt_model.predict(input_df)[0],0)
 
