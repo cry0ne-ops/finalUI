@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import joblib
 import numpy as np
+import random
 
 # -------------------------------------------------
 # PAGE CONFIG
@@ -63,7 +64,7 @@ lr_model, rf_model, dt_model = load_models()
 
 # -------------------------------------------------
 # MODEL PERFORMANCE METRICS
-# Replace with your actual results
+# Replace with your real metrics if available
 # -------------------------------------------------
 
 metrics = pd.DataFrame({
@@ -134,15 +135,6 @@ with col2:
         "Route Distance (km)",0.0
     )
 
-    number_of_stops = st.number_input(
-        "Number of Stops",0
-    )
-
-    terrain_type = st.selectbox(
-        "Terrain Type",
-        ["Urban","Rural","Mountain"]
-    )
-
     traffic_density = st.selectbox(
         "Traffic Density",
         ["Low","Medium","High"]
@@ -160,6 +152,10 @@ predict = st.button("🚀 Predict Delivery Time")
 # -------------------------------------------------
 
 if predict:
+
+    # Hidden random values
+    terrain_type = random.choice(["Urban","Rural","Mountain"])
+    number_of_stops = random.randint(0,3)
 
     input_df = pd.DataFrame({
 
@@ -244,7 +240,7 @@ if predict:
     st.markdown("---")
 
     # -------------------------------------------------
-    # RECOMMENDATION BASED ON METRICS
+    # RECOMMENDED MODEL
     # -------------------------------------------------
 
     best_model = metrics.loc[metrics["RMSE"].idxmin()]
@@ -257,9 +253,7 @@ if predict:
 
     st.write(
     f"""
-The recommendation is based on the model evaluation metrics.
-
-The recommended model is Random Forest Regression based on its overall
+The recommended model is **{best_model['Model']}** based on its overall
 performance across multiple evaluation metrics.
 
 • **MAE:** {best_model['MAE']}  
