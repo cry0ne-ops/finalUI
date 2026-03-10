@@ -259,12 +259,15 @@ if predict:
     f"""
 The recommendation is based on the model evaluation metrics.
 
+The recommended model is Random Forest Regression based on its overall
+performance across multiple evaluation metrics.
+
 • **MAE:** {best_model['MAE']}  
 • **MSE:** {best_model['MSE']}  
 • **RMSE:** {best_model['RMSE']}  
 • **R² Score:** {best_model['R2']}
 
-This model was selected because it has the **lowest RMSE**, which means its predictions are closest to the actual delivery times.
-A lower RMSE indicates better prediction accuracy compared to the other models.
+This indicates that the model provides the most accurate and reliable
+predictions among the evaluated models.
 """
     )
