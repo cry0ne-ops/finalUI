@@ -17,7 +17,7 @@ st.set_page_config(
 # TITLE
 # -------------------------------------------------
 
-st.title("🚚 Delivery Time Prediction System")
+st.title("Delivery Time Prediction System")
 st.caption(
 "Predict the delivery time of perishable vegetables using machine learning models."
 )
@@ -81,20 +81,6 @@ metrics = pd.DataFrame({
     "R2":[0.72,0.89,0.83]
 
 })
-
-# -------------------------------------------------
-# SYSTEM OVERVIEW
-# -------------------------------------------------
-
-st.subheader("System Overview")
-
-col1, col2, col3 = st.columns(3)
-
-col1.metric("Models Used", "3")
-col2.metric("Prediction Type", "Regression")
-col3.metric("Dataset Features", "12")
-
-st.markdown("---")
 
 # -------------------------------------------------
 # INPUT SECTION
