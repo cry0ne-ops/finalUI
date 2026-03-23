@@ -131,7 +131,7 @@ with col1:
 
     vehicle_type = st.selectbox(
         "Vehicle Type",
-        ["Motorcycle","Van","Truck"]
+        ["Motorcycle(160 CC )","Van(Mini Van)","Truck(4-Wheeler Truck)"]
     )
 
 # -------------------------------------------------
@@ -142,7 +142,7 @@ with col2:
 
     route_distance_km = st.number_input(
         "Route Distance (km)",
-        min_value=0.0
+        min_value=0.5
     )
 
     traffic_density = st.selectbox(
@@ -152,7 +152,7 @@ with col2:
 
     weather_condition = st.selectbox(
         "Weather Condition",
-        ["Sunny","Rainy","Fog","Storm"]
+        ["Sunny(Clear Skies)","Rainy(Light Rain)","Fog(Low Visibility)","Stormy(Typhoon)"]
     )
 
 # -------------------------------------------------
