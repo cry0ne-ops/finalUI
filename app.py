@@ -178,7 +178,7 @@ if predict:
     col1, col2, col3 = st.columns(3)
 
     col1.metric(
-        "Linear Regression",
+        "Multiple Linear Regression",
         f"{pred_lr:.2f} minutes"
     )
 
@@ -199,7 +199,7 @@ if predict:
     # -------------------------------------------------
 
     prediction_df = pd.DataFrame({
-        "Model":["Linear Regression","Random Forest","Decision Tree"],
+        "Model":["Multiple Linear Regression","Random Forest","Decision Tree"],
         "Prediction":[pred_lr,pred_rf,pred_dt]
     })
 
