@@ -107,7 +107,7 @@ with col1:
 
     time_of_day = st.selectbox(
         "Time of Day",
-        ["Morning","Afternoon","Evening","Night"]
+        ["Morning(5:01 am – 12:00 pm)","Afternoon(12:01 pm – 5:00 pm)","Evening (5:01 pm – 9:00pm)","Night(9:01 PM – 5:00 AM)"]
     )
 
     vehicle_type = st.selectbox(
