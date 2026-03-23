@@ -100,9 +100,23 @@ with col1:
         "Vegetable Type",
         ["Tomatoes","Potatoes","Carrots","Cabbage","Onions","Bell Pepper"]
     )
+shelf_life_map = {
+    "Tomatoes": 5,
+    "Potatoes": 30,
+    "Carrots": 21,
+    "Cabbage": 14,
+    "Onions": 60,
+    "Bell Pepper": 7
+}
 
-    shelf_life_days = st.number_input(
-        "Shelf Life (Days)",1,60,7
+default_shelf = shelf_life_map.get(vegetable_type, 7)
+
+shelf_life_days = st.number_input(
+    "Shelf Life (Days)",
+    min_value=1,
+    max_value=60,
+    value=default_shelf
+)
     )
 
     time_of_day = st.selectbox(
