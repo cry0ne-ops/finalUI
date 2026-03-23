@@ -116,7 +116,6 @@ shelf_life_days = st.number_input(
     min_value=1,
     max_value=60,
     value=default_shelf
-)
     )
 
     time_of_day = st.selectbox(
