@@ -131,7 +131,7 @@ with col1:
 
     vehicle_type = st.selectbox(
         "Vehicle Type",
-        ["Motorcycle(160 CC )","Van(Mini Van)","Truck(4-Wheeler Truck)"]
+        ["Motorcycle (150 CC)","Van (Delivery Van)","Truck (Mini Truck)"]
     )
 
 # -------------------------------------------------
@@ -200,7 +200,7 @@ if predict:
 
     col1, col2, col3 = st.columns(3)
 
-    col1.metric("Linear Regression", f"{pred_lr:.2f} minutes")
+    col1.metric("Multiple Linear Regression", f"{pred_lr:.2f} minutes")
     col2.metric("Random Forest", f"{pred_rf:.2f} minutes")
     col3.metric("Decision Tree", f"{pred_dt:.2f} minutes")
 
@@ -208,7 +208,7 @@ if predict:
 
     # Comparison chart
     prediction_df = pd.DataFrame({
-        "Model":["Linear Regression","Random Forest","Decision Tree"],
+        "Model":["Multiple Linear Regression","Random Forest","Decision Tree"],
         "Prediction":[pred_lr,pred_rf,pred_dt]
     })
 
