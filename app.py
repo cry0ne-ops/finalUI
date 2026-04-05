@@ -3,7 +3,6 @@ import pandas as pd
 import joblib
 import numpy as np
 import random
-import plotly.express as px
 
 # -------------------------------------------------
 # PAGE CONFIG
@@ -176,7 +175,7 @@ if predict:
     pred_dt = max(dt_model.predict(input_df)[0], 0)
 
     # -------------------------------------------------
-    # RESULTS TABLE
+    # RESULTS TABLE (ALIGNED)
     # -------------------------------------------------
 
     st.markdown("---")
@@ -202,48 +201,36 @@ if predict:
     st.dataframe(results_df, use_container_width=True)
 
     # -------------------------------------------------
-    # CLEAN GRAPH (PLOTLY)
+    # CLEAN STREAMLIT GRAPH
     # -------------------------------------------------
 
     st.subheader("📈 Prediction Comparison")
 
-    results_df["Short Model"] = [
-        "Linear Regression",
-        "Random Forest",
-        "Decision Tree"
-    ]
+    chart_df = pd.DataFrame({
+        "Model": [
+            "Linear Regression",
+            "Random Forest",
+            "Decision Tree"
+        ],
+        "Prediction (minutes)": [
+            pred_lr,
+            pred_rf,
+            pred_dt
+        ]
+    })
 
-    # Highlight best model (based on RMSE)
-    best_index = results_df["RMSE"].idxmin()
-    colors = ["#4CAF50" if i == best_index else "#1f77b4" for i in results_df.index]
+    chart_df = chart_df.set_index("Model")
 
-    fig = px.bar(
-        results_df,
-        x="Short Model",
-        y="Prediction (minutes)",
-        text="Prediction (minutes)"
-    )
+    # Optional: sort for cleaner look
+    # chart_df = chart_df.sort_values(by="Prediction (minutes)")
 
-    fig.update_traces(
-        marker_color=colors,
-        texttemplate='%{text:.2f}',
-        textposition='outside'
-    )
-
-    fig.update_layout(
-        xaxis_title="Model",
-        yaxis_title="Delivery Time (minutes)",
-        title="Delivery Time Prediction per Model",
-        showlegend=False
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
+    st.bar_chart(chart_df)
 
     # -------------------------------------------------
     # BEST MODEL
     # -------------------------------------------------
 
-    best_model = results_df.loc[best_index]
+    best_model = results_df.loc[results_df["RMSE"].idxmin()]
 
     st.markdown("---")
     st.subheader("🏆 Recommended Model")
