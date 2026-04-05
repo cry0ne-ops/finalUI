@@ -193,64 +193,69 @@ if predict:
     st.markdown("---")
 
     # -------------------------------------------------
-    # RESULTS
-    # -------------------------------------------------
-
-    st.subheader("Predicted Delivery Time")
-
-    col1, col2, col3 = st.columns(3)
-
-    col1.metric("Multiple Linear Regression", f"{pred_lr:.2f} minutes")
-    col2.metric("Random Forest", f"{pred_rf:.2f} minutes")
-    col3.metric("Decision Tree", f"{pred_dt:.2f} minutes")
-
-    st.markdown("---")
-
-    # Comparison chart
-    prediction_df = pd.DataFrame({
-        "Model":["Multiple Linear Regression","Random Forest","Decision Tree"],
-        "Prediction":[pred_lr,pred_rf,pred_dt]
-    })
-
-    st.subheader("Prediction Comparison")
-    st.bar_chart(prediction_df.set_index("Model"))
-
-    st.markdown("---")
-
-    # Metrics
-    st.subheader("Model Performance Metrics")
-    st.dataframe(metrics)
-    st.bar_chart(metrics.set_index("Model")[["RMSE"]])
-
-    st.markdown("---")
-
-    # -------------------------------------------------
-# 🧠 SCENARIO-BASED MODEL SELECTION
+# 📊 METRIC-BASED RECOMMENDATION
 # -------------------------------------------------
 
-st.subheader("Recommended Model")
+st.subheader("📊 Metric-Based Recommendation")
 
-# Scenario logic
+metric_best_model = metrics.loc[metrics["RMSE"].idxmin()]
+
+st.success(f"{metric_best_model['Model']} is the best based on RMSE.")
+
+st.write(f"""
+**Performance Metrics:**
+
+• MAE: {metric_best_model['MAE']}  
+• MSE: {metric_best_model['MSE']}  
+• RMSE: {metric_best_model['RMSE']}  
+• R² Score: {metric_best_model['R2']}
+""")
+
+# -------------------------------------------------
+# 🧠 SCENARIO-BASED RECOMMENDATION
+# -------------------------------------------------
+
+st.markdown("---")
+st.subheader("🧠 Scenario-Based Recommendation")
+
 if route_distance_km < 5 and traffic_density == "Low":
-    recommended_model = "Multiple Linear Regression"
-    reason = "Short distance and low traffic → simple linear patterns"
+    scenario_model = "Multiple Linear Regression"
+    reason = "Short distance and low traffic → linear relationships"
 
 elif traffic_density == "High" or "Storm" in weather_condition or "Fog" in weather_condition:
-    recommended_model = "Decision Tree"
-    reason = "Complex conditions → tree models handle non-linearity better"
+    scenario_model = "Decision Tree"
+    reason = "Complex conditions → non-linear patterns"
 
 else:
-    recommended_model = "Random Forest"
-    reason = "Balanced conditions → ensemble model performs best"
+    scenario_model = "Random Forest"
+    reason = "Balanced conditions → ensemble model is robust"
 
-# Display result
-st.success(f"{recommended_model} is recommended.")
+st.success(f"{scenario_model} is recommended based on current conditions.")
 
 st.write(f"""
 **Reason:**
-
 {reason}
 
+**Conditions:**
+• Distance: {route_distance_km} km  
+• Traffic: {traffic_density}  
+• Weather: {weather_condition}
+""")
+
+# -------------------------------------------------
+# ⚖️ FINAL COMPARISON
+# -------------------------------------------------
+
+st.markdown("---")
+st.subheader("⚖️ Recommendation Insight")
+
+st.write(f"""
+• 📊 Metric-Based Best Model: **{metric_best_model['Model']}**  
+• 🧠 Scenario-Based Model: **{scenario_model}**
+
+This shows that while one model performs best overall, different models
+can be more effective depending on real-world delivery conditions.
+""")
 **Conditions:**
 • Distance: {route_distance_km} km  
 • Traffic: {traffic_density}  
