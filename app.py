@@ -213,9 +213,9 @@ if predict:
             "Multiple Linear Regression"
         ],
         "Prediction (minutes)": [
-            pred_lr,
             pred_rf,
-            pred_dt
+            pred_dt,
+            pred_lr,
         ]
     })
 
