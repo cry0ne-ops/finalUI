@@ -117,7 +117,7 @@ with col1:
         value=default_shelf
     )
 
-    st.caption(f"Suggested shelf life for {vegetable_type}: {default_shelf} days")
+    st.caption(f"Average shelf life for {vegetable_type}: {default_shelf} days")
 
     time_of_day = st.selectbox(
         "Time of Day",
