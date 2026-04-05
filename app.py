@@ -224,16 +224,35 @@ if predict:
 
     st.markdown("---")
 
-    # Best model
-    best_model = metrics.loc[metrics["RMSE"].idxmin()]
+    # -------------------------------------------------
+# 🧠 SCENARIO-BASED MODEL SELECTION
+# -------------------------------------------------
 
-    st.subheader("Recommended Model")
+st.subheader("Recommended Model")
 
-    st.success(f"{best_model['Model']} is recommended.")
+# Scenario logic
+if route_distance_km < 5 and traffic_density == "Low":
+    recommended_model = "Multiple Linear Regression"
+    reason = "Short distance and low traffic → simple linear patterns"
 
-    st.write(f"""
-    • MAE: {best_model['MAE']}  
-    • MSE: {best_model['MSE']}  
-    • RMSE: {best_model['RMSE']}  
-    • R² Score: {best_model['R2']}
-    """)
+elif traffic_density == "High" or "Storm" in weather_condition or "Fog" in weather_condition:
+    recommended_model = "Decision Tree"
+    reason = "Complex conditions → tree models handle non-linearity better"
+
+else:
+    recommended_model = "Random Forest"
+    reason = "Balanced conditions → ensemble model performs best"
+
+# Display result
+st.success(f"{recommended_model} is recommended.")
+
+st.write(f"""
+**Reason:**
+
+{reason}
+
+**Conditions:**
+• Distance: {route_distance_km} km  
+• Traffic: {traffic_density}  
+• Weather: {weather_condition}
+""")
