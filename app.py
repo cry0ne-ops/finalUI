@@ -208,9 +208,9 @@ if predict:
 
     chart_df = pd.DataFrame({
         "Model": [
-            "Linear Regression",
             "Random Forest",
-            "Decision Tree"
+            "Decision Tree",
+            "Multiple Linear Regression"
         ],
         "Prediction (minutes)": [
             pred_lr,
