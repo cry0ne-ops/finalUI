@@ -131,7 +131,7 @@ with col1:
 
     vehicle_type = st.selectbox(
         "Vehicle Type",
-        ["Motorcycle (150 CC)","Van (Delivery Van)","Truck (Mini Truck)"]
+        ["Motorcycle 155 CC","Delivery Van","Mini Truck"]
     )
 
 # -------------------------------------------------
@@ -152,7 +152,7 @@ with col2:
 
     weather_condition = st.selectbox(
         "Weather Condition",
-        ["Sunny(Clear Skies)","Rainy(Light Rain)","Fog(Low Visibility)","Stormy(Typhoon)"]
+        ["Sunny (Clear Skies)","Rainy (Light Rain)","Fog (Low Visibility)","Stormy (Typhoon)"]
     )
 
 # -------------------------------------------------
