@@ -192,7 +192,7 @@ if predict:
 
     st.markdown("---")
 
-    # -------------------------------------------------
+# -------------------------------------------------
 # 📊 METRIC-BASED RECOMMENDATION
 # -------------------------------------------------
 
@@ -255,9 +255,4 @@ st.write(f"""
 
 This shows that while one model performs best overall, different models
 can be more effective depending on real-world delivery conditions.
-""")
-**Conditions:**
-• Distance: {route_distance_km} km  
-• Traffic: {traffic_density}  
-• Weather: {weather_condition}
 """)
