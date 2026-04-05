@@ -122,10 +122,10 @@ with col1:
     time_of_day = st.selectbox(
         "Time of Day",
         [
-            "Morning (5:01 am – 12:00 pm)",
-            "Afternoon (12:01 pm – 5:00 pm)",
-            "Evening (5:01 pm – 9:00 pm)",
-            "Night (9:01 pm – 5:00 am)"
+            "Morning (6:00 AM – 12:00 PM)",
+            "Afternoon (12:00 PM – 6:00 PM)",
+            "Evening (6:00 PM – 10:00 PM)",
+            "Night (10:00 PM – 6:00 AM)"
         ]
     )
 
