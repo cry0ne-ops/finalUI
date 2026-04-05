@@ -43,6 +43,7 @@ Evaluation Metrics:
 • R² Score  
 
 ✔ The system recommends the most accurate model.
+✔ It also adapts model selection based on real-world scenarios.
 """)
 
 # -------------------------------------------------
@@ -123,10 +124,7 @@ with col1:
 # COLUMN 2
 with col2:
 
-    route_distance_km = st.number_input(
-        "Route Distance (km)",
-        min_value=0.5
-    )
+    route_distance_km = st.number_input("Route Distance (km)", min_value=0.5)
 
     traffic_density = st.selectbox(
         "Traffic Density",
@@ -175,7 +173,7 @@ if predict:
     pred_dt = max(dt_model.predict(input_df)[0], 0)
 
     # -------------------------------------------------
-    # RESULTS TABLE (ALIGNED)
+    # RESULTS TABLE
     # -------------------------------------------------
 
     st.markdown("---")
@@ -201,48 +199,73 @@ if predict:
     st.dataframe(results_df, use_container_width=True)
 
     # -------------------------------------------------
-    # CLEAN STREAMLIT GRAPH
+    # GRAPH
     # -------------------------------------------------
 
     st.subheader("📈 Prediction Comparison")
 
     chart_df = pd.DataFrame({
-        "Model": [
-            "Random Forest",
-            "Decision Tree",
-            "Multiple Linear Regression"
-        ],
-        "Prediction (minutes)": [
-            pred_rf,
-            pred_dt,
-            pred_lr,
-        ]
-    })
-
-    chart_df = chart_df.set_index("Model")
-
-    # Optional: sort for cleaner look
-    # chart_df = chart_df.sort_values(by="Prediction (minutes)")
+        "Model": ["Linear Regression", "Random Forest", "Decision Tree"],
+        "Prediction (minutes)": [pred_lr, pred_rf, pred_dt]
+    }).set_index("Model")
 
     st.bar_chart(chart_df)
 
     # -------------------------------------------------
-    # BEST MODEL
+    # BEST MODEL (RMSE)
     # -------------------------------------------------
 
     best_model = results_df.loc[results_df["RMSE"].idxmin()]
 
     st.markdown("---")
-    st.subheader("🏆 Recommended Model")
+    st.subheader("🏆 Best Model (Statistical)")
 
-    st.success(f"{best_model['Model']} is recommended (lowest RMSE).")
+    st.success(f"{best_model['Model']} (lowest RMSE)")
+
+    # -------------------------------------------------
+    # 🧠 SCENARIO-BASED MODEL SELECTION
+    # -------------------------------------------------
+
+    if route_distance_km < 5 and traffic_density == "Low":
+        scenario_model_name = "Multiple Linear Regression"
+        reason = "Short distance and low traffic → linear patterns dominate"
+
+    elif traffic_density == "High" or weather_condition in ["Storm", "Fog"]:
+        scenario_model_name = "Decision Tree"
+        reason = "Complex conditions → tree-based model handles variability better"
+
+    else:
+        scenario_model_name = "Random Forest"
+        reason = "Balanced conditions → ensemble model performs best"
+
+    scenario_model = results_df[results_df["Model"] == scenario_model_name].iloc[0]
+
+    st.markdown("---")
+    st.subheader("🧠 Scenario-Based Recommendation")
+
+    st.success(f"{scenario_model_name} is recommended")
 
     st.write(f"""
-    • Prediction: {best_model['Prediction (minutes)']:.2f} minutes  
-    • MAE: {best_model['MAE']}  
-    • MSE: {best_model['MSE']}  
-    • RMSE: {best_model['RMSE']}  
-    • R² Score: {best_model['R2 Score']}
+    **Reason:**
+    {reason}
+
+    **Conditions:**
+    • Distance: {route_distance_km} km  
+    • Traffic: {traffic_density}  
+    • Weather: {weather_condition}
+    """)
+
+    # -------------------------------------------------
+    # COMPARISON INSIGHT
+    # -------------------------------------------------
+
+    st.subheader("⚖️ Insight")
+
+    st.write(f"""
+    • 📊 Statistical Best: **{best_model['Model']}**  
+    • 🧠 Scenario-Based: **{scenario_model_name}**
+
+    This shows that model effectiveness can vary depending on real-world conditions.
     """)
 
     # -------------------------------------------------
