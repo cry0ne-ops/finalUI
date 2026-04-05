@@ -3,6 +3,7 @@ import pandas as pd
 import joblib
 import numpy as np
 import random
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 # -------------------------------------------------
 # PAGE CONFIG
@@ -35,19 +36,12 @@ This system predicts delivery time using:
 • Random Forest  
 • Decision Tree  
 
-Evaluation Metrics:
-
-• MAE  
-• MSE  
-• RMSE  
-• R² Score  
-
-✔ The system recommends the most accurate model.
-✔ It also adapts model selection based on real-world scenarios.
+✔ Includes real-world scenario validation using dataset
+✔ Adaptive model recommendation
 """)
 
 # -------------------------------------------------
-# LOAD MODELS
+# LOAD MODELS + DATASET
 # -------------------------------------------------
 
 @st.cache_resource
@@ -57,23 +51,12 @@ def load_models():
     dt = joblib.load("models/decision_tree_model.pkl")
     return lr, rf, dt
 
+@st.cache_data
+def load_data():
+    return pd.read_excel("data/dataset.xlsx")
+
 lr_model, rf_model, dt_model = load_models()
-
-# -------------------------------------------------
-# MODEL METRICS
-# -------------------------------------------------
-
-metrics = pd.DataFrame({
-    "Model": [
-        "Multiple Linear Regression",
-        "Random Forest",
-        "Decision Tree"
-    ],
-    "MAE": [4.8, 2.9, 3.5],
-    "MSE": [30.2, 12.1, 18.3],
-    "RMSE": [5.49, 3.48, 4.27],
-    "R2": [0.72, 0.89, 0.83]
-})
+df = load_data()
 
 # -------------------------------------------------
 # INPUT SECTION
@@ -83,7 +66,6 @@ st.subheader("📥 Enter Delivery Information")
 
 col1, col2 = st.columns(2)
 
-# COLUMN 1
 with col1:
 
     vegetable_type = st.selectbox(
@@ -121,7 +103,6 @@ with col1:
         ["Motorcycle", "Van", "Truck"]
     )
 
-# COLUMN 2
 with col2:
 
     route_distance_km = st.number_input("Route Distance (km)", min_value=0.5)
@@ -137,14 +118,10 @@ with col2:
     )
 
 # -------------------------------------------------
-# PREDICT BUTTON
+# PREDICT
 # -------------------------------------------------
 
 predict = st.button("🚀 Predict Delivery Time")
-
-# -------------------------------------------------
-# PREDICTION
-# -------------------------------------------------
 
 if predict:
 
@@ -177,96 +154,77 @@ if predict:
     # -------------------------------------------------
 
     st.markdown("---")
-    st.subheader("📊 Model Results Comparison")
+    st.subheader("📊 Model Predictions")
 
     results_df = pd.DataFrame({
-        "Model": [
-            "Multiple Linear Regression",
-            "Random Forest",
-            "Decision Tree"
-        ],
-        "Prediction (minutes)": [
-            pred_lr,
-            pred_rf,
-            pred_dt
-        ],
-        "MAE": metrics["MAE"],
-        "MSE": metrics["MSE"],
-        "RMSE": metrics["RMSE"],
-        "R2 Score": metrics["R2"]
+        "Model": ["Linear Regression", "Random Forest", "Decision Tree"],
+        "Prediction (minutes)": [pred_lr, pred_rf, pred_dt]
     })
 
     st.dataframe(results_df, use_container_width=True)
 
-    # -------------------------------------------------
-    # GRAPH
-    # -------------------------------------------------
-
-    st.subheader("📈 Prediction Comparison")
-
-    chart_df = pd.DataFrame({
-        "Model": ["Linear Regression", "Random Forest", "Decision Tree"],
-        "Prediction (minutes)": [pred_lr, pred_rf, pred_dt]
-    }).set_index("Model")
-
-    st.bar_chart(chart_df)
+    # Graph
+    st.bar_chart(results_df.set_index("Model"))
 
     # -------------------------------------------------
-    # BEST MODEL (RMSE)
+    # 🧠 REAL SCENARIO VALIDATION
     # -------------------------------------------------
-
-    best_model = results_df.loc[results_df["RMSE"].idxmin()]
 
     st.markdown("---")
-    st.subheader("🏆 Best Model (Statistical)")
+    st.subheader("📊 Real Scenario Validation")
 
-    st.success(f"{best_model['Model']} (lowest RMSE)")
+    scenario_df = df.copy()
 
-    # -------------------------------------------------
-    # 🧠 SCENARIO-BASED MODEL SELECTION
-    # -------------------------------------------------
+    # Apply filters
+    scenario_df = scenario_df[
+        (scenario_df["traffic_density"] == traffic_density) &
+        (scenario_df["weather_condition"] == weather_condition)
+    ]
 
-    if route_distance_km < 5 and traffic_density == "Low":
-        scenario_model_name = "Multiple Linear Regression"
-        reason = "Short distance and low traffic → linear patterns dominate"
+    scenario_df = scenario_df[
+        (scenario_df["route_distance_km"] >= route_distance_km - 2) &
+        (scenario_df["route_distance_km"] <= route_distance_km + 2)
+    ]
 
-    elif traffic_density == "High" or weather_condition in ["Storm", "Fog"]:
-        scenario_model_name = "Decision Tree"
-        reason = "Complex conditions → tree-based model handles variability better"
-
+    if len(scenario_df) < 10:
+        st.warning("⚠️ Not enough data for reliable validation.")
     else:
-        scenario_model_name = "Random Forest"
-        reason = "Balanced conditions → ensemble model performs best"
 
-    scenario_model = results_df[results_df["Model"] == scenario_model_name].iloc[0]
+        X = scenario_df.drop("delivery_time", axis=1)
+        y = scenario_df["delivery_time"]
 
-    st.markdown("---")
-    st.subheader("🧠 Scenario-Based Recommendation")
+        results = []
 
-    st.success(f"{scenario_model_name} is recommended")
+        for name, model in [
+            ("Linear Regression", lr_model),
+            ("Random Forest", rf_model),
+            ("Decision Tree", dt_model)
+        ]:
 
-    st.write(f"""
-    **Reason:**
-    {reason}
+            preds = model.predict(X)
 
-    **Conditions:**
-    • Distance: {route_distance_km} km  
-    • Traffic: {traffic_density}  
-    • Weather: {weather_condition}
-    """)
+            mae = mean_absolute_error(y, preds)
+            rmse = np.sqrt(mean_squared_error(y, preds))
 
-    # -------------------------------------------------
-    # COMPARISON INSIGHT
-    # -------------------------------------------------
+            results.append({
+                "Model": name,
+                "MAE": mae,
+                "RMSE": rmse
+            })
 
-    st.subheader("⚖️ Insight")
+        validation_df = pd.DataFrame(results).sort_values("RMSE")
 
-    st.write(f"""
-    • 📊 Statistical Best: **{best_model['Model']}**  
-    • 🧠 Scenario-Based: **{scenario_model_name}**
+        st.dataframe(validation_df)
 
-    This shows that model effectiveness can vary depending on real-world conditions.
-    """)
+        st.bar_chart(validation_df.set_index("Model"))
+
+        best_model = validation_df.iloc[0]
+
+        st.success(f"""
+        🧠 Best Model for THIS Scenario: {best_model['Model']}
+
+        RMSE: {best_model['RMSE']:.2f}
+        """)
 
     # -------------------------------------------------
     # SPOILAGE RISK
