@@ -196,59 +196,43 @@ if predict:
     # RESULTS
     # -------------------------------------------------
 
-    st.subheader("Predicted Delivery Time")
+   st.markdown("---")
+st.subheader("Model Results Comparison")
 
-    col1, col2, col3 = st.columns(3)
+results_df = pd.DataFrame({
+    "Model": [
+        "Multiple Linear Regression",
+        "Random Forest",
+        "Decision Tree"
+    ],
+    "Prediction (minutes)": [
+        pred_lr,
+        pred_rf,
+        pred_dt
+    ],
+    "MAE": metrics["MAE"],
+    "MSE": metrics["MSE"],
+    "RMSE": metrics["RMSE"],
+    "R2 Score": metrics["R2"]
+})
 
-    col1.metric("Multiple Linear Regression", f"{pred_lr:.2f} minutes")
-    col2.metric("Random Forest", f"{pred_rf:.2f} minutes")
-    col3.metric("Decision Tree", f"{pred_dt:.2f} minutes")
+# Display table
+st.dataframe(results_df, use_container_width=True)
 
-    st.markdown("---")
+# Highlight best model (lowest RMSE)
+best_model = results_df.loc[results_df["RMSE"].idxmin()]
 
-    # Comparison chart
-    prediction_df = pd.DataFrame({
-        "Model":["Multiple Linear Regression","Random Forest","Decision Tree"],
-        "Prediction":[pred_lr,pred_rf,pred_dt]
-    })
+st.markdown("---")
+st.subheader("Recommended Model")
 
-    st.subheader("Prediction Comparison")
-    st.bar_chart(prediction_df.set_index("Model"))
+st.success(f"{best_model['Model']} is recommended based on lowest RMSE.")
 
-    st.markdown("---")
+st.write(f"""
+**Why this model?**
 
-    # Metrics
-    st.subheader("Model Performance Metrics")
-    st.dataframe(metrics)
-    st.bar_chart(metrics.set_index("Model")[["RMSE"]])
-
-    st.markdown("---")
-
-    # Best model
-    best_model = metrics.loc[metrics["RMSE"].idxmin()]
-
-    st.subheader("Recommended Model")
-
-    st.success(f"{best_model['Model']} is recommended.")
-
-    st.write(f"""
-    • MAE: {best_model['MAE']}  
-    • MSE: {best_model['MSE']}  
-    • RMSE: {best_model['RMSE']}  
-    • R² Score: {best_model['R2']}
-    """)
-
-    # -------------------------------------------------
-    # BONUS: SPOILAGE RISK (🔥 thesis-level feature)
-    # -------------------------------------------------
-
-    freshness_remaining = shelf_life_days - (pred_rf / 1440)
-
-    st.subheader("Spoilage Risk")
-
-    if freshness_remaining > 2:
-        st.success("🟢 Low Risk (Fresh)")
-    elif freshness_remaining > 0:
-        st.warning("🟡 Moderate Risk")
-    else:
-        st.error("🔴 High Risk of Spoilage")
+• Prediction: {best_model['Prediction (minutes)']:.2f} minutes  
+• MAE: {best_model['MAE']}  
+• MSE: {best_model['MSE']}  
+• RMSE: {best_model['RMSE']}  
+• R² Score: {best_model['R2 Score']}
+""")
