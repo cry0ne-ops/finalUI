@@ -3,6 +3,7 @@ import pandas as pd
 import joblib
 import numpy as np
 import random
+from sklearn.metrics import mean_squared_error
 
 # -------------------------------------------------
 # PAGE CONFIG
@@ -40,17 +41,15 @@ This system predicts delivery time using three machine learning models:
 
 Each model is evaluated using:
 
-• **MAE** – Mean Absolute Error  
-• **MSE** – Mean Squared Error  
-• **RMSE** – Root Mean Squared Error  
-• **R² Score** – Model accuracy
-
-The system recommends the model with the **best overall performance**.
+• MAE  
+• MSE  
+• RMSE  
+• R² Score  
 """
 )
 
 # -------------------------------------------------
-# LOAD MODELS
+# LOAD MODELS + DATASET
 # -------------------------------------------------
 
 @st.cache_resource
@@ -60,17 +59,22 @@ def load_models():
     dt = joblib.load("models/decision_tree_model.pkl")
     return lr, rf, dt
 
+@st.cache_data
+def load_data():
+    return pd.read_excel("data/dataset.xlsx")
+
 lr_model, rf_model, dt_model = load_models()
+df = load_data()
 
 # -------------------------------------------------
-# MODEL PERFORMANCE METRICS
+# MODEL METRICS
 # -------------------------------------------------
 
 metrics = pd.DataFrame({
     "Model":[
         "Multiple Linear Regression",
-        "Random Forest Regression",
-        "Decision Tree Regression"
+        "Random Forest",
+        "Decision Tree"
     ],
     "MAE":[4.8,2.9,3.5],
     "MSE":[30.2,12.1,18.3],
@@ -83,13 +87,7 @@ metrics = pd.DataFrame({
 # -------------------------------------------------
 
 st.subheader("Enter Delivery Information")
-st.write("Provide the delivery conditions below to estimate the delivery time.")
-
 col1, col2 = st.columns(2)
-
-# -------------------------------------------------
-# COLUMN 1
-# -------------------------------------------------
 
 with col1:
 
@@ -98,7 +96,6 @@ with col1:
         ["Tomatoes","Potatoes","Carrots","Cabbage","Onions","Bell Pepper"]
     )
 
-    # Shelf life mapping
     shelf_life_map = {
         "Tomatoes": 5,
         "Potatoes": 30,
@@ -111,39 +108,22 @@ with col1:
     default_shelf = shelf_life_map.get(vegetable_type, 7)
 
     shelf_life_days = st.number_input(
-        "Shelf Life (Days)",
-        min_value=1,
-        max_value=60,
-        value=default_shelf
+        "Shelf Life (Days)",1,60,default_shelf
     )
-
-    st.caption(f"Average shelf life for {vegetable_type}: {default_shelf} days")
 
     time_of_day = st.selectbox(
         "Time of Day",
-        [
-            "Morning (5:01 am – 12:00 pm)",
-            "Afternoon (12:01 pm – 5:00 pm)",
-            "Evening (5:01 pm – 9:00 pm)",
-            "Night (9:01 pm – 5:00 am)"
-        ]
+        ["Morning","Afternoon","Evening","Night"]
     )
 
     vehicle_type = st.selectbox(
         "Vehicle Type",
-        ["Motorcycle (150 CC)","Van (Delivery Van)","Truck (Mini Truck)"]
+        ["Motorcycle","Van","Truck"]
     )
-
-# -------------------------------------------------
-# COLUMN 2
-# -------------------------------------------------
 
 with col2:
 
-    route_distance_km = st.number_input(
-        "Route Distance (km)",
-        min_value=0.5
-    )
+    route_distance_km = st.number_input("Route Distance (km)",0.5)
 
     traffic_density = st.selectbox(
         "Traffic Density",
@@ -152,18 +132,14 @@ with col2:
 
     weather_condition = st.selectbox(
         "Weather Condition",
-        ["Sunny(Clear Skies)","Rainy(Light Rain)","Fog(Low Visibility)","Stormy(Typhoon)"]
+        ["Sunny","Rainy","Fog","Storm"]
     )
 
 # -------------------------------------------------
-# PREDICT BUTTON
+# PREDICT
 # -------------------------------------------------
 
 predict = st.button("🚀 Predict Delivery Time")
-
-# -------------------------------------------------
-# PREDICTION
-# -------------------------------------------------
 
 if predict:
 
@@ -186,9 +162,10 @@ if predict:
         "vehicle_type":[vehicle_type]
     })
 
+    # Predictions
     pred_lr = abs(lr_model.predict(input_df)[0])
-    pred_rf = max(rf_model.predict(input_df)[0], 0)
-    pred_dt = max(dt_model.predict(input_df)[0], 0)
+    pred_rf = max(rf_model.predict(input_df)[0],0)
+    pred_dt = max(dt_model.predict(input_df)[0],0)
 
     st.markdown("---")
 
@@ -200,40 +177,108 @@ if predict:
 
     col1, col2, col3 = st.columns(3)
 
-    col1.metric("Multiple Linear Regression", f"{pred_lr:.2f} minutes")
-    col2.metric("Random Forest", f"{pred_rf:.2f} minutes")
-    col3.metric("Decision Tree", f"{pred_dt:.2f} minutes")
+    col1.metric("Linear Regression", f"{pred_lr:.2f} min")
+    col2.metric("Random Forest", f"{pred_rf:.2f} min")
+    col3.metric("Decision Tree", f"{pred_dt:.2f} min")
 
     st.markdown("---")
 
-    # Comparison chart
+    # Chart
     prediction_df = pd.DataFrame({
-        "Model":["Multiple Linear Regression","Random Forest","Decision Tree"],
+        "Model":["Linear Regression","Random Forest","Decision Tree"],
         "Prediction":[pred_lr,pred_rf,pred_dt]
-    })
+    }).set_index("Model")
 
-    st.subheader("Prediction Comparison")
-    st.bar_chart(prediction_df.set_index("Model"))
+    st.bar_chart(prediction_df)
 
     st.markdown("---")
 
     # Metrics
     st.subheader("Model Performance Metrics")
     st.dataframe(metrics)
-    st.bar_chart(metrics.set_index("Model")[["RMSE"]])
-
-    st.markdown("---")
 
     # Best model
     best_model = metrics.loc[metrics["RMSE"].idxmin()]
 
     st.subheader("Recommended Model")
-
     st.success(f"{best_model['Model']} is recommended.")
 
-    st.write(f"""
-    • MAE: {best_model['MAE']}  
-    • MSE: {best_model['MSE']}  
-    • RMSE: {best_model['RMSE']}  
-    • R² Score: {best_model['R2']}
-    """)
+    # -------------------------------------------------
+    # 🔥 METHOD 3: PERFORMANCE DISTRIBUTION
+    # -------------------------------------------------
+
+    st.markdown("---")
+    st.subheader("📊 Model Performance Across Scenarios")
+
+    distribution_results = []
+
+    for traffic in df["traffic_density"].unique():
+        for weather in df["weather_condition"].unique():
+
+            subset = df[
+                (df["traffic_density"] == traffic) &
+                (df["weather_condition"] == weather)
+            ]
+
+            if len(subset) < 10:
+                continue
+
+            X = subset.drop("delivery_time", axis=1)
+            y = subset["delivery_time"]
+
+            row = {
+                "Traffic": traffic,
+                "Weather": weather
+            }
+
+            for name, model in [
+                ("Linear Regression", lr_model),
+                ("Random Forest", rf_model),
+                ("Decision Tree", dt_model)
+            ]:
+
+                try:
+                    preds = model.predict(X)
+                    rmse = np.sqrt(mean_squared_error(y, preds))
+                except:
+                    rmse = np.nan
+
+                row[name] = rmse
+
+            distribution_results.append(row)
+
+    distribution_df = pd.DataFrame(distribution_results)
+
+    st.dataframe(distribution_df)
+
+    # Average RMSE
+    st.subheader("📈 Average RMSE Across Scenarios")
+
+    avg_rmse = distribution_df[[
+        "Linear Regression",
+        "Random Forest",
+        "Decision Tree"
+    ]].mean()
+
+    avg_df = pd.DataFrame({
+        "Model":["Linear Regression","Random Forest","Decision Tree"],
+        "Average RMSE":avg_rmse.values
+    }).set_index("Model")
+
+    st.bar_chart(avg_df)
+
+    # -------------------------------------------------
+    # SPOILAGE RISK
+    # -------------------------------------------------
+
+    freshness_remaining = shelf_life_days - (pred_rf / 1440)
+
+    st.markdown("---")
+    st.subheader("🥬 Spoilage Risk")
+
+    if freshness_remaining > 2:
+        st.success("🟢 Low Risk")
+    elif freshness_remaining > 0:
+        st.warning("🟡 Moderate Risk")
+    else:
+        st.error("🔴 High Risk")
