@@ -61,7 +61,68 @@ def load_models():
     return lr, rf, dt
 
 lr_model, rf_model, dt_model = load_models()
+# -------------------------------------------------
+# PREDICTION
+# -------------------------------------------------
 
+if predict:
+
+    terrain_type = random.choice(["Urban","Rural","Mountain"])
+    number_of_stops = random.randint(0,3)
+
+    input_df = pd.DataFrame({
+        "vegetable_type":[vegetable_type],
+        "shelf_life_days":[shelf_life_days],
+        "time_of_day":[time_of_day],
+        "origin_latitude":[0],
+        "origin_longitude":[0],
+        "destination_latitude":[0],
+        "destination_longitude":[0],
+        "route_distance_km":[route_distance_km],
+        "terrain_type":[terrain_type],
+        "number_of_stops":[number_of_stops],
+        "traffic_density":[traffic_density],
+        "weather_condition":[weather_condition],
+        "vehicle_type":[vehicle_type]
+    })
+
+    pred_lr = abs(lr_model.predict(input_df)[0])
+    pred_rf = max(rf_model.predict(input_df)[0], 0)
+    pred_dt = max(dt_model.predict(input_df)[0], 0)
+
+    st.markdown("---")
+
+    # -------------------------------------------------
+    # RESULTS
+    # -------------------------------------------------
+
+    st.subheader("Predicted Delivery Time")
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Multiple Linear Regression", f"{pred_lr:.2f} minutes")
+    col2.metric("Random Forest", f"{pred_rf:.2f} minutes")
+    col3.metric("Decision Tree", f"{pred_dt:.2f} minutes")
+
+    st.markdown("---")
+
+    # Comparison chart
+    prediction_df = pd.DataFrame({
+        "Model":["Multiple Linear Regression","Random Forest","Decision Tree"],
+        "Prediction":[pred_lr,pred_rf,pred_dt]
+    })
+
+    st.subheader("Prediction Comparison")
+    st.bar_chart(prediction_df.set_index("Model"))
+
+    st.markdown("---")
+
+    # Metrics
+    st.subheader("Model Performance Metrics")
+    st.dataframe(metrics)
+    st.bar_chart(metrics.set_index("Model")[["RMSE"]])
+
+    st.markdown("---")
 # -------------------------------------------------
 # MODEL PERFORMANCE METRICS
 # -------------------------------------------------
