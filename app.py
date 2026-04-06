@@ -199,9 +199,9 @@ if predict:
 
     col1, col2, col3 = st.columns(3)
 
-    col1.metric("Multiple Linear Regression", f"{pred_lr:.2f} minutes")
-    col2.metric("Random Forest", f"{pred_rf:.2f} minutes")
-    col3.metric("Decision Tree", f"{pred_dt:.2f} minutes")
+    col2.metric("Multiple Linear Regression", f"{pred_lr:.2f} minutes")
+    col3.metric("Random Forest", f"{pred_rf:.2f} minutes")
+    col1.metric("Decision Tree", f"{pred_dt:.2f} minutes")
 
     st.markdown("---")
 
