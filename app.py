@@ -224,7 +224,7 @@ st.subheader("📊 Metric-Based Recommendation")
 
 metric_best_model = metrics.loc[metrics["RMSE"].idxmin()]
 
-st.success(f"{metric_best_model['Model']} is the best based on RMSE.")
+st.success(f"{metric_best_model['Model']} is the best based on metrics.")
 
 st.write(f"""
 **Performance Metrics:**
