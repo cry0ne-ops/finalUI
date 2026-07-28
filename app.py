@@ -222,6 +222,9 @@ if predict:
 
 st.subheader("📊 Metric-Based Recommendation")
 
+st.title("Model Comparison")
+st.dataframe(metrics, use_container_width=True)
+
 metric_best_model = metrics.loc[metrics["RMSE"].idxmin()]
 
 st.success(f"{metric_best_model['Model']} is the best based on metrics.")
